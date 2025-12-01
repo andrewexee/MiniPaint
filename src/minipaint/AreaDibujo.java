@@ -49,6 +49,7 @@ public class AreaDibujo extends JComponent {
             g2.setColor(trazoActual.color);
             g2.setStroke(new BasicStroke(trazoActual.anchoTrazo));
 
+            // Dibujamos la figura con o sin Relleno
             if (trazoActual.relleno) {
                 g2.fill(trazoActual.trazo);
             } else {

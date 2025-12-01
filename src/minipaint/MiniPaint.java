@@ -16,7 +16,7 @@ import java.io.IOException;
  */
 public class MiniPaint {
 
-    private final String version = "1.0";
+    private final String version = "1.1";
     private Modos modoActual = Modos.PINCEL;
     private int xInicio, yInicio;
 
@@ -52,9 +52,13 @@ public class MiniPaint {
                         areaDibujo.agregarTrazo(trazoActual, colorActual, anchoTrazoActual, false);
 
                     }
-                    // Si es Rectangulo; almacenamos la posicion inicial al presionar
-                    else if (modoActual == Modos.RECTANGULO || modoActual == Modos.RECTANGULO_RELLENO) {
-                        // Guardamos Punto inicial del rectángulo
+                    // Si es Rectangulo o Triangulo; almacenamos la posicion inicial al presionar
+                    else if (modoActual == Modos.RECTANGULO ||
+                             modoActual == Modos.RECTANGULO_RELLENO ||
+                             modoActual == Modos.TRIANGULO ||
+                             modoActual == Modos.TRIANGULO_RELLENO) {
+
+                        // Guardamos Punto inicial del rectángulo / triangulo
                         xInicio = e.getX();
                         yInicio = e.getY();
                     }
@@ -64,10 +68,11 @@ public class MiniPaint {
             // Evento al levantar
             public void mouseReleased(MouseEvent e) {
 
+                // Logica del RECTANGULO
                 // Capturamos cuando se suelta el clic en caso de que el modo sea RECTANGULO
                 if (SwingUtilities.isLeftMouseButton(e)){
                     if (modoActual == Modos.RECTANGULO ||  modoActual == Modos.RECTANGULO_RELLENO) {
-                        // Creamos el rectángulo cuando se suelta el raton
+                        // Creamos el trazo para almacenar el rectángulo cuando se suelta el raton
                         trazoActual = new Path2D.Float();
 
                         // Calculamos las cordenadas y dimensiones
@@ -84,6 +89,33 @@ public class MiniPaint {
                         trazoActual.closePath();
 
                         boolean conRelleno = (modoActual == Modos.RECTANGULO_RELLENO) ? true : false;
+                        areaDibujo.agregarTrazo(trazoActual, colorActual, anchoTrazoActual, conRelleno);
+                    }
+                    // Logica del TRIANGULO
+                    // Capturamos cuando se suelta el clic en el caso de que el modo sea TRIANGULO
+                    else if (modoActual == Modos.TRIANGULO || modoActual == Modos.TRIANGULO_RELLENO) {
+                        // Creamos el trazo para almacenar el triangulo cuando se suelta el raton
+                        trazoActual = new Path2D.Float();
+
+                        // Calculamos los tres vertices del triangulo
+                        // Vertice superior (centro superior del area)
+                        int xSuperior = (xInicio + e.getX()) / 2;
+                        int ySuperior = Math.min(yInicio, e.getY());
+
+                        // Vertice inferior izquierdo
+                        int xIzquierdo = Math.min(xInicio, e.getX());
+                        int yInferior = Math.max(yInicio, e.getY());
+
+                        // Vertice inferior derecho
+                        int xDerecho = Math.max(xInicio, e.getX());
+
+                        // Dibujamos el triangulo
+                        trazoActual.moveTo(xSuperior, ySuperior);
+                        trazoActual.lineTo(xIzquierdo, yInferior);
+                        trazoActual.lineTo(xDerecho, yInferior);
+                        trazoActual.closePath();
+
+                        boolean conRelleno = (modoActual == Modos.TRIANGULO_RELLENO) ? true : false;
                         areaDibujo.agregarTrazo(trazoActual, colorActual, anchoTrazoActual, conRelleno);
                     }
                 }
@@ -120,6 +152,10 @@ public class MiniPaint {
         JButton cuadrado = new JButton(getIcono("./src/iconos/cuadrado.png"));
         JButton cuadradoFilled = new JButton(getIcono("./src/iconos/cuadradoFilled.png"));
         JButton color  = new JButton(getIcono("./src/iconos/circulo-de-color.png"));
+
+        JButton triangulo = new JButton(getIcono("./src/iconos/triangulo.png"));
+        JButton trianguloFilled = new JButton(getIcono("./src/iconos/trianguloFilled.png"));
+
 
         // ToolBar con "1" == Horientada en Vertical
         JToolBar toolBar2 = new JToolBar(1);
@@ -288,6 +324,24 @@ public class MiniPaint {
         });
         //endregion
 
+        //region >> Boton Triangulo
+        triangulo.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                modoActual = Modos.TRIANGULO;
+            }
+        });
+        //endregion
+
+        //region >> Boton Triangulo Relleno
+        trianguloFilled.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                modoActual = Modos.TRIANGULO_RELLENO;
+            }
+        });
+        //endregion
+
         //region >>Botones Popup Menu
         borrarTodo.addActionListener(e -> {areaDibujo.borrarTrazos();});
         retrocederPaso.addActionListener(e -> {areaDibujo.borrarUltimoTrazo();});
@@ -312,8 +366,11 @@ public class MiniPaint {
         toolBar1.add(borrar);
         toolBar1.addSeparator();
         toolBar1.add(pincel);
+        toolBar1.addSeparator();
         toolBar1.add(cuadrado);
         toolBar1.add(cuadradoFilled);
+        toolBar1.add(triangulo);
+        toolBar1.add(trianguloFilled);
         toolBar1.addSeparator();
         toolBar1.add(color);
         ventana.add(toolBar1, BorderLayout.NORTH);
